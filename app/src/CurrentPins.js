@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import Pin from "./Pin"
 
 // leaning on https://github.com/trufflesuite/drizzle/blob/develop/packages/react-components/src/new-context-api/ContractData.js
 
@@ -105,7 +106,13 @@ class CurrentPins extends Component {
 
     let pinsOut=[];
     for(let i=0; i<numberOfPins; i++) {
-      pinsOut.push(<span key={i}>{this.ipfsHashValue(i)}</span>);
+      pinsOut.push(
+        <Pin
+          key={this.ipfsHashValue(i)}
+          ipfsHash={this.ipfsHashValue(i)}
+          drizzle={this.props.drizzle}
+          drizzleState={this.props.drizzleState}
+        />);
     }
 
     return (
@@ -119,4 +126,4 @@ class CurrentPins extends Component {
 
 }
 
-export default CurrentPins
+export default CurrentPins;

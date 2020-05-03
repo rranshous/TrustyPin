@@ -28,7 +28,7 @@ contract TrustyPin is Constants {
     super;
     owner = msg.sender;
     chunksAvailable = 0;
-    authorizedPinners[msg.sender] = true;
+    authorizedPinners[owner] = true;
   }
 
   function addPin(string memory _ipfsHash, uint _chunksToAllocate) public {
@@ -99,6 +99,9 @@ contract TrustyPin is Constants {
 
   function isAuthorizedPinner(address _addr) public view returns (bool) {
     return (authorizedPinners[_addr]);
+  }
+
+  function() external payable {
   }
 }
 
