@@ -87,7 +87,14 @@ contract("TrustyPin", accounts => {
     await  trustyPinInstance.removePin(ipfsHash2, { from: accounts[0] })
     chunksAvailable = await trustyPinInstance.chunksAvailable();
     assert.equal(chunksAvailable.toNumber(), contractChunksAvailable.toNumber() + chunksToAllocate);
-    await trustyPinInstance.getIpfsHashByIndex(1);
-    await trustyPinInstance.getPin(ipfsHash);
+    assert.equal(await trustyPinInstance.getNumberOfPins(), 1);
+    await truffleAssert.reverts(
+      trustyPinInstance.getIpfsHashByIndex(1),
+      "Index too large"
+    );
+    await truffleAssert.reverts(
+      trustyPinInstance.getPin(ipfsHash2),
+      "Pin not found"
+    );
   });
 });

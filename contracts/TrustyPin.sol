@@ -17,6 +17,7 @@ contract TrustyPin is Constants {
     uint chunksAllocated;
     address owner;
     uint8 state;
+    uint enumIndex;
   }
 
   mapping (string => Pin) pinsByContentHash;
@@ -30,7 +31,7 @@ contract TrustyPin is Constants {
 
   function addPin(string memory _ipfsHash, uint _chunksToAllocate) public {
     require(_chunksToAllocate > 0, 'No chunks allocated');
-    Pin memory pin = Pin(_ipfsHash, _chunksToAllocate, msg.sender, STATE_REQUESTED);
+    Pin memory pin = Pin(_ipfsHash, _chunksToAllocate, msg.sender, STATE_REQUESTED, ipfsHashes.length);
     chunksAvailable = chunksAvailable.sub(_chunksToAllocate, "Not enough chunksAvailable");
     ipfsHashes.push(_ipfsHash);
     pinsByContentHash[_ipfsHash] = pin;
@@ -38,8 +39,22 @@ contract TrustyPin is Constants {
 
   function removePin(string memory _ipfsHash) public {
     Pin storage pin = pinsByContentHash[_ipfsHash];
+
+    // return alloted storage chunks
     require(pin.chunksAllocated > 0, 'Pin not found');
     chunksAvailable = chunksAvailable.add(pin.chunksAllocated);
+
+    // remove the pin's entry from the ipfsHashes array
+    assert(pin.enumIndex < ipfsHashes.length);
+    ipfsHashes[pin.enumIndex] = ipfsHashes[ipfsHashes.length-1];
+    delete ipfsHashes[ipfsHashes.length-1];
+    ipfsHashes.length--;
+    Pin storage pinToMove = pinsByContentHash[ipfsHashes[ipfsHashes.length-1]];
+    assert(pinToMove.chunksAllocated > 0);
+    pinToMove.enumIndex = pin.enumIndex;
+
+    // remove pin entry from mapping
+    delete pinsByContentHash[_ipfsHash];
   }
 
   function getPin(string memory _ipfsHash)
