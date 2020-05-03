@@ -1,5 +1,6 @@
 import React from "react";
 import { newContextComponents } from "@drizzle/react-components";
+import CurrentPins from "./CurrentPins"
 import logo from "./logo.png";
 
 const { AccountData, ContractData, ContractForm } = newContextComponents;
@@ -8,6 +9,8 @@ export default ({ drizzle, drizzleState }) => {
   // destructure drizzle and drizzleState from props
   return (
     <div className="App">
+
+
       <div>
         <img src={logo} alt="drizzle-logo" />
         <h1>Drizzle Examples</h1>
@@ -26,6 +29,29 @@ export default ({ drizzle, drizzleState }) => {
           precision={3}
         />
       </div>
+
+    <div className="section">
+      <h2>pins</h2>
+      count:
+      <ContractData
+        drizzle={drizzle}
+        drizzleState={drizzleState}
+        contract="TrustyPin"
+        method="getNumberOfPins"></ContractData>
+      <br/>
+      you can pin?:
+      <ContractData
+        drizzle={drizzle} drizzleState={drizzleState}
+        contract="TrustyPin"
+        method="isAuthorizedPinner"
+        methodArgs={[drizzleState.accounts[0]]}/>
+      <br/>
+      current pins:
+      <CurrentPins
+        drizzle={drizzle}
+        drizzleState={drizzleState} />
+    </div>
+
 
       <div className="section">
         <h2>SimpleStorage</h2>

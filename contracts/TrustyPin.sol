@@ -1,14 +1,12 @@
 pragma solidity >=0.5.6 <0.7.0;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-//import "@openzeppelin/contracts/access/Ownable.sol"; // onlyOwner
 
 contract Constants {
   uint8 internal constant STATE_REQUESTED = 2;
 }
 
 contract TrustyPin is Constants {
-
 
   using SafeMath for uint;
 
