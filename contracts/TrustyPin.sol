@@ -15,7 +15,7 @@ contract TrustyPin is Constants {
   struct Pin {
     string ipfsHash;
     uint chunksAllocated;
-    address owner;
+    address pinner;
     uint8 state;
     uint enumIndex;
   }
@@ -39,9 +39,10 @@ contract TrustyPin is Constants {
 
   function removePin(string memory _ipfsHash) public {
     Pin storage pin = pinsByContentHash[_ipfsHash];
+    require(pin.chunksAllocated > 0, 'Pin not found');
+    require(pin.pinner == msg.sender, 'Not authorized to remove pin');
 
     // return alloted storage chunks
-    require(pin.chunksAllocated > 0, 'Pin not found');
     chunksAvailable = chunksAvailable.add(pin.chunksAllocated);
 
     // remove the pin's entry from the ipfsHashes array
@@ -59,11 +60,11 @@ contract TrustyPin is Constants {
 
   function getPin(string memory _ipfsHash)
   public view returns (
-    string memory ipfsHash, uint chunksAllocated, address owner, uint8 state
+    string memory ipfsHash, uint chunksAllocated, address pinner, uint8 state
   ) {
     require(pinsByContentHash[_ipfsHash].chunksAllocated > 0, 'Pin not found');
     Pin storage pin = pinsByContentHash[_ipfsHash];
-    return (pin.ipfsHash, pin.chunksAllocated, pin.owner, pin.state);
+    return (pin.ipfsHash, pin.chunksAllocated, pin.pinner, pin.state);
   }
 
   function getIpfsHashByIndex(uint _index) public view returns (string memory) {

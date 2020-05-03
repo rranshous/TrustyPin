@@ -36,9 +36,9 @@ contract("TrustyPin", accounts => {
     assert.equal(pinDetails.state, states.requested);
   });
 
-  it("associates sender to pin as owner", async () => {
+  it("associates sender to pin as pinner", async () => {
     const pinDetails = await trustyPinInstance.getPin(ipfsHash);
-    assert.equal(pinDetails.owner, accounts[0]);
+    assert.equal(pinDetails.pinner, accounts[0]);
   });
 
   it("sets chunksAllocated on pin", async () => {
@@ -79,7 +79,7 @@ contract("TrustyPin", accounts => {
     }
   });
 
-  it("allows owner to remove pin, returning allocated chunks", async () => {
+  it("allows pinner to remove pin, returning allocated chunks", async () => {
     let chunksAvailable = await trustyPinInstance.chunksAvailable();
     let pin = await trustyPinInstance.getPin(ipfsHash2);
     let pinnedChunks = pin.chunksAllocated;
@@ -95,6 +95,13 @@ contract("TrustyPin", accounts => {
     await truffleAssert.reverts(
       trustyPinInstance.getPin(ipfsHash2),
       "Pin not found"
+    );
+  });
+
+  it("only allows pinner to remove pin", async () => {
+    await truffleAssert.reverts(
+      trustyPinInstance.removePin(ipfsHash, { from: accounts[1] }),
+      'Not authorized to remove pin'
     );
   });
 });
