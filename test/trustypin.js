@@ -31,6 +31,20 @@ contract("TrustyPin", accounts => {
     assert.equal(pinDetails.chunksAllocated, 32);
   });
 
+  it("errors if you try and add an existing pin", async () => {
+    await truffleAssert.reverts(
+      trustyPinInstance.addPin(ipfsHash, chunksToAllocate, { from: accounts[0] }),
+      'Pin already exists'
+    );
+  });
+
+  it("only allows authorized pinners to add pins", async () => {
+    await truffleAssert.reverts(
+      trustyPinInstance.addPin(ipfsHash2, chunksToAllocate, { from: accounts[1] }),
+      'Account not authorized to pin'
+    );
+  });
+
   it("defaults new pin's state to requested", async () => {
     const pinDetails = await trustyPinInstance.getPin(ipfsHash);
     assert.equal(pinDetails.state, states.requested);
@@ -53,7 +67,7 @@ contract("TrustyPin", accounts => {
 
   it("rejects transactions which would dip chunksAvailable below 0", async () => {
     await truffleAssert.reverts(
-      trustyPinInstance.addPin(ipfsHash, 100, { from: accounts[0] }),
+      trustyPinInstance.addPin(ipfsHash2, 100, { from: accounts[0] }),
       "Not enough chunksAvailable"
     );
   });
@@ -101,7 +115,43 @@ contract("TrustyPin", accounts => {
   it("only allows pinner to remove pin", async () => {
     await truffleAssert.reverts(
       trustyPinInstance.removePin(ipfsHash, { from: accounts[1] }),
-      'Not authorized to remove pin'
+      'Account not authorized to remove pin'
+    );
+  });
+
+  it("can be queried if address is an authorized pinner", async () => {
+    assert.isTrue(await trustyPinInstance.isAuthorizedPinner(accounts[0]));
+    assert.isFalse(await trustyPinInstance.isAuthorizedPinner(accounts[1]));
+  })
+
+  it("allows owner to add a new pinner", async () => {
+    await trustyPinInstance.addAuthorizedPinner(accounts[1], { from: accounts[0] });
+    assert.isTrue(await trustyPinInstance.isAuthorizedPinner(accounts[1]));
+  });
+
+  it("only allows owner to add new pinner", async () => {
+    await truffleAssert.reverts(
+      trustyPinInstance.addAuthorizedPinner(accounts[2], { from: accounts[1] }),
+      'Account not authorized to add pinner'
+    );
+  });
+
+  it("allows owner to remove pinner", async () => {
+    await trustyPinInstance.removeAuthorizedPinner(accounts[1], { from: accounts[0] });
+    assert.isFalse(await trustyPinInstance.isAuthorizedPinner(accounts[1]));
+  });
+
+  it("only allows owner to remove pinner", async () => {
+    await truffleAssert.reverts(
+      trustyPinInstance.removeAuthorizedPinner(accounts[1], { from: accounts[1] }),
+      'Account not authorized to remove pinner'
+    );
+  });
+
+  it("error if removing pinner who is not already authorized", async () => {
+    await truffleAssert.reverts(
+      trustyPinInstance.removeAuthorizedPinner(accounts[3], { from: accounts[0] }),
+      'Pinner not already authorized'
     );
   });
 });

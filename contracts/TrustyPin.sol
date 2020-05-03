@@ -20,17 +20,23 @@ contract TrustyPin is Constants {
     uint enumIndex;
   }
 
+  address private owner;
   mapping (string => Pin) pinsByContentHash;
-  uint public chunksAvailable;
   string[] ipfsHashes;
+  mapping (address => bool) authorizedPinners;
+  uint public chunksAvailable;
 
   constructor() public {
     super;
+    owner = msg.sender;
     chunksAvailable = 0;
+    authorizedPinners[msg.sender] = true;
   }
 
   function addPin(string memory _ipfsHash, uint _chunksToAllocate) public {
     require(_chunksToAllocate > 0, 'No chunks allocated');
+    require(authorizedPinners[msg.sender], 'Account not authorized to pin');
+    require(pinsByContentHash[_ipfsHash].chunksAllocated == 0, 'Pin already exists');
     Pin memory pin = Pin(_ipfsHash, _chunksToAllocate, msg.sender, STATE_REQUESTED, ipfsHashes.length);
     chunksAvailable = chunksAvailable.sub(_chunksToAllocate, "Not enough chunksAvailable");
     ipfsHashes.push(_ipfsHash);
@@ -40,7 +46,7 @@ contract TrustyPin is Constants {
   function removePin(string memory _ipfsHash) public {
     Pin storage pin = pinsByContentHash[_ipfsHash];
     require(pin.chunksAllocated > 0, 'Pin not found');
-    require(pin.pinner == msg.sender, 'Not authorized to remove pin');
+    require(pin.pinner == msg.sender, 'Account not authorized to remove pin');
 
     // return alloted storage chunks
     chunksAvailable = chunksAvailable.add(pin.chunksAllocated);
@@ -56,6 +62,17 @@ contract TrustyPin is Constants {
 
     // remove pin entry from mapping
     delete pinsByContentHash[_ipfsHash];
+  }
+
+  function addAuthorizedPinner(address _addr) public {
+    require(owner == msg.sender, 'Account not authorized to add pinner');
+    authorizedPinners[_addr] = true;
+  }
+
+  function removeAuthorizedPinner(address _addr) public {
+    require(owner == msg.sender, 'Account not authorized to remove pinner');
+    require(authorizedPinners[_addr] == true, 'Pinner not already authorized');
+    delete authorizedPinners[_addr];
   }
 
   function getPin(string memory _ipfsHash)
@@ -80,6 +97,10 @@ contract TrustyPin is Constants {
   function setChunksAvailable(uint _chunksAvailable) public {
     require(_chunksAvailable > 0, 'chunksAvailable must be more than 0');
     chunksAvailable = _chunksAvailable;
+  }
+
+  function isAuthorizedPinner(address _addr) public view returns (bool) {
+    return (authorizedPinners[_addr]);
   }
 }
 
