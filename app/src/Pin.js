@@ -37,7 +37,8 @@ class Pin extends Component {
     return (
       <div className="pin">
         <div className="ipfs-hash">
-          <label>ipfsHash:</label>{this.pinData().ipfsHash}
+          <label>ipfsHash:</label>
+          <a href={'ipfs://' + this.pinData().ipfsHash}>{this.pinData().ipfsHash}</a>
         </div>
         <div className="chunks-allocated">
           <label>chunksAllocated:</label>{this.pinData().chunksAllocated}
