@@ -73,6 +73,11 @@ contract TrustyPin is Constants {
     delete authorizedPinners[_addr];
   }
 
+  function setChunksAvailable(uint _chunksAvailable) public {
+    require(_chunksAvailable > 0, 'chunksAvailable must be more than 0');
+    chunksAvailable = _chunksAvailable;
+  }
+
   function getPin(string memory _ipfsHash)
   public view returns (
     string memory ipfsHash, uint chunksAllocated, address pinner, uint8 state
@@ -90,11 +95,6 @@ contract TrustyPin is Constants {
 
   function getNumberOfPins() public view returns (uint) {
     return ipfsHashes.length;
-  }
-
-  function setChunksAvailable(uint _chunksAvailable) public {
-    require(_chunksAvailable > 0, 'chunksAvailable must be more than 0');
-    chunksAvailable = _chunksAvailable;
   }
 
   function isAuthorizedPinner(address _addr) public view returns (bool) {

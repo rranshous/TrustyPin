@@ -46,6 +46,24 @@ export default ({ drizzle, drizzleState }) => {
         method="isAuthorizedPinner"
         methodArgs={[drizzleState.accounts[0]]}/>
       <br/>
+      chunks available:
+      <ContractData
+        drizzle={drizzle} drizzleState={drizzleState}
+        contract="TrustyPin"
+        method="chunksAvailable" />
+      <br/>
+      set chunks available:
+      <ContractForm
+        drizzle={drizzle}
+        contract="TrustyPin" method="setChunksAvailable"
+      />
+      <br/>
+      add pin:
+      <ContractForm
+        drizzle={drizzle}
+        contract="TrustyPin" method="addPin"
+        sendArgs={{ gas: 3000000 }} />
+      <br/>
       current pins:
       <CurrentPins
         drizzle={drizzle}

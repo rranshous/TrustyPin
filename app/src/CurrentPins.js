@@ -19,21 +19,16 @@ class CurrentPins extends Component {
 	componentDidUpdate(prevProps, prevState) {
     // TODO: put in condition
     if(!this.numberOfPinsLoaded()) {
-      console.log("number of pins not loaded");
       return;
     }
     let numberOfPins = this.numberOfPins();
     let numberOfHashes = this.state.ipfsHashes.length;
-    console.log("numberOfPins:", numberOfPins);
-    console.log("number of ipfsHashes:", numberOfHashes);
     if(numberOfHashes == numberOfPins) {
-      console.log("ipfs hash record for each pin");
       return;
     }
     let ipfsHashes = [];
     for(let i=0; i<numberOfPins; i++) {
       if(!this.state.ipfsHashes[i]) {
-        console.log("making call or ipfs hash:", i);
         ipfsHashes.push({
           dataKey: this.props.drizzle.contracts.TrustyPin.methods.getIpfsHashByIndex.cacheCall(i),
         });
@@ -45,7 +40,6 @@ class CurrentPins extends Component {
       ...this.state,
       ipfsHashes
     };
-    console.log("updating state:", newState);
     this.setState(newState);
 	}
 
@@ -63,7 +57,8 @@ class CurrentPins extends Component {
   };
 
   ipfsHashLoaded = (index) => {
-    return this.state.ipfsHashes[index].dataKey in this.contract().ipfsHashes;
+    if(!this.state.ipfsHashes[index]) { return false; }
+    return this.state.ipfsHashes[index].dataKey in this.contract().getIpfsHashByIndex;
   };
 
   ipfsHashesLoaded = () => {
@@ -110,7 +105,7 @@ class CurrentPins extends Component {
 
     let pinsOut=[];
     for(let i=0; i<numberOfPins; i++) {
-      pinsOut.push(<span>{this.ipfsHashValue(i)}</span>);
+      pinsOut.push(<span key={i}>{this.ipfsHashValue(i)}</span>);
     }
 
     return (
