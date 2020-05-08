@@ -26,7 +26,8 @@ docker run \
 echo "running TrustyPin's backend container"
 docker run \
   -it \
-  --name=trusty-pin-backend:latest \
   --link=ipfs-node \
-  TrustyPin-backend:latest
+  -e WEB3_PROVIDER_URL= \
+  -e IPFS_NODE_URL=ipfs-node:5001
+  trusty-pin-backend:latest
 

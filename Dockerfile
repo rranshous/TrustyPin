@@ -5,4 +5,5 @@ WORKDIR /app
 
 RUN npm install
 
+ENTRYPOINT []
 CMD ["node","./backend/backend.js"]

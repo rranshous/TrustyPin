@@ -4,14 +4,18 @@ const IpfsHttpClient = require('ipfs-http-client')
 
 console.log("starting");
 
-const backendUrl = 'ws://localhost:8545'; // testing
+
+
+const backendUrl = process.env.WEB3_PROVIDER_URL || 'ws://localhost:8545';
+const ipfsNodeUrl = process.env.IPFS_NODE_URL || 'http://localhost:5001';
+
 const provider = new Web3.providers.WebsocketProvider(backendUrl)
 
 const trustyPinDetails = require('../app/src/contracts/TrustyPin.json');
 const TrustyPin = contract(trustyPinDetails);
 TrustyPin.setProvider(provider);
 
-const ipfs = IpfsHttpClient('http://localhost:5001')
+const ipfs = IpfsHttpClient(ipfsNodeUrl);
 
 let pins = {};
 
@@ -33,7 +37,7 @@ const updatePins = async () => {
 const pinToIpfs = async (ipfsHash) => {
   console.info("pinning to ipfs:", ipfsHash);
   let r = await ipfs.pin.add(ipfsHash);
-  console.log("done pinning to ifs:", r);
+  console.info("done pinning to ifs:", r);
 };
 
 const run = async () => {
