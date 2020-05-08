@@ -18,7 +18,7 @@ class Pin extends Component {
   };
 
   pinLoaded = () => {
-    return this.state.getPin.dataKey in this.contract().getPin;
+    return (this.state.getPin.dataKey in this.contract().getPin) && this.pinData();
   };
 
   pinData = () => {

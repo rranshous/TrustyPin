@@ -3,11 +3,12 @@ const Web3 = require('web3');
 const IpfsHttpClient = require('ipfs-http-client')
 
 console.log("starting");
-
-
+const RUN_INTERVAL=1000 * 30;
 
 const backendUrl = process.env.WEB3_PROVIDER_URL || 'ws://localhost:8545';
 const ipfsNodeUrl = process.env.IPFS_NODE_URL || 'http://localhost:5001';
+console.log("backendUrl:", backendUrl);
+console.log("ipfsNodeUrl:", ipfsNodeUrl);
 
 const provider = new Web3.providers.WebsocketProvider(backendUrl)
 
@@ -18,12 +19,22 @@ TrustyPin.setProvider(provider);
 const ipfs = IpfsHttpClient(ipfsNodeUrl);
 
 let pins = {};
+let inFlight = {};
+let alreadyAdded = {};
+
+const populateAlreadyAdded = async () => {
+  for await (let data of ipfs.pin.ls()) {
+    if(data.type !== 'indirect') {
+      alreadyAdded[data.cid.toString()] = true;
+    }
+  }
+};
 
 const updatePins = async () => {
-  console.log("updaing pins");
+  console.debug("updating pins");
   let deployed = await TrustyPin.deployed();
   let numberOfPins = await deployed.getNumberOfPins();
-  console.info("numberOfPins:", numberOfPins.toNumber());
+  console.debug("numberOfPins:", numberOfPins.toNumber());
   pins = {}; // TODO: not clear just update + clean
   for(let i=0; i<numberOfPins; i++) {
     let ipfsHash = await deployed.getIpfsHashByIndex(i);
@@ -35,8 +46,19 @@ const updatePins = async () => {
 };
 
 const pinToIpfs = async (ipfsHash) => {
-  console.info("pinning to ipfs:", ipfsHash);
+  if(inFlight[ipfsHash]) {
+    console.debug("skipping, already requested pin:", ipfsHash);
+    return;
+  } else if(alreadyAdded[ipfsHash]) {
+    console.debug("skipping, already added pin:", ipfsHash);
+    return;
+  } else {
+    console.info("pinning to ipfs:", ipfsHash);
+  }
+  inFlight[ipfsHash] = true;
   let r = await ipfs.pin.add(ipfsHash);
+  delete inFlight[ipfsHash];
+  alreadyAdded[ipfsHash] = true;
   console.info("done pinning to ifs:", r);
 };
 
@@ -44,10 +66,34 @@ const run = async () => {
   console.log("running");
   await Promise.all(
     Object.entries(pins).map(([_,pin]) => {
-      console.log(`Pin: ${pin.ipfsHash} (${pin.chunksAllocated}-${pin.pinner})`);
+      console.debug(`RequestedPin: ${pin.ipfsHash} (${pin.chunksAllocated}-${pin.pinner})`);
       return pinToIpfs(pin.ipfsHash);
     })
   );
 };
 
-updatePins().then(run).then(process.exit);
+// move
+console.log("populating existing ipfs pins");
+populateAlreadyAdded().then(() => {
+
+  console.info("existing ifs pins:", Object.keys(alreadyAdded).length);
+
+  console.debug("starting background runner:", RUN_INTERVAL/1000,"s");
+  setInterval(() => {
+    try {
+      updatePins().then(run);
+    } catch(err) {
+      console.error("background runner err:", err);
+    }
+  }, RUN_INTERVAL);
+
+  try {
+    console.debug("starting initial run");
+    updatePins().then(run);
+  } catch(err) {
+    console.error("outside err:", err);
+    process.exit(1);
+  }
+
+});
+
