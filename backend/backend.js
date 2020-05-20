@@ -73,11 +73,12 @@ const run = async () => {
   );
 };
 
-let deployed = await TrustyPin.deployed();
-
-deployed.events.PinAdded({}, (event) => {
-  console.log("PinAdded event:", event);
-  updatePins().then(run);
+TrustyPin.deployed().then((deployed) => {
+  deployed.PinAdded({}, (error, event) => {
+    let ipfsHash = event.args.ipfsHash;
+    console.debug("got new pin from event:", ipfsHash);
+    pinToIpfs(ipfsHash);
+  });
 });
 
 process.on('SIGINT', function() {
