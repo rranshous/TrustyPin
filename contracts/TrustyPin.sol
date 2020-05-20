@@ -18,6 +18,18 @@ contract TrustyPin is Constants {
     uint enumIndex;
   }
 
+  event PinAdded(
+    string ipfsHash,
+    uint chunksAllocated,
+    address indexed pinner,
+    string indexed ipfsHashSha3
+  );
+
+  event PinRemoved(
+    string indexed ipfsHashSha3,
+    address indexed removedBy
+  );
+
   address private owner;
   mapping (string => Pin) pinsByContentHash;
   string[] ipfsHashes;
@@ -39,6 +51,7 @@ contract TrustyPin is Constants {
     chunksAvailable = chunksAvailable.sub(_chunksToAllocate, "Not enough chunksAvailable");
     ipfsHashes.push(_ipfsHash);
     pinsByContentHash[_ipfsHash] = pin;
+    emit PinAdded(pin.ipfsHash, pin.chunksAllocated, pin.pinner, pin.ipfsHash);
   }
 
   function removePin(string memory _ipfsHash) public {
@@ -60,6 +73,8 @@ contract TrustyPin is Constants {
 
     // remove pin entry from mapping
     delete pinsByContentHash[_ipfsHash];
+
+    emit PinRemoved(_ipfsHash, msg.sender);
   }
 
   function addAuthorizedPinner(address _addr) public {

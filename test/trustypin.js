@@ -1,3 +1,5 @@
+const Web3Utils = require('web3-utils');
+const { Keccak } = require('sha3');
 const TrustyPin = artifacts.require("TrustyPin");
 const truffleAssert = require('truffle-assertions');
 
@@ -153,5 +155,25 @@ contract("TrustyPin", accounts => {
       trustyPinInstance.removeAuthorizedPinner(accounts[3], { from: accounts[0] }),
       'Pinner not already authorized'
     );
+  });
+
+  it("events when a new pin is added", async () => {
+    let ipfsHash2Kec = Web3Utils.sha3(ipfsHash2);
+    let result = await trustyPinInstance.addPin(ipfsHash2, chunksToAllocate, { from: accounts[0] })
+    await truffleAssert.eventEmitted(result, 'PinAdded', (event) => {
+      return event.ipfsHash == ipfsHash2 &&
+             event.ipfsHashSha3 == ipfsHash2Kec &&
+             event.chunksAllocated == chunksToAllocate &&
+             event.pinner == accounts[0];
+    });
+  });
+
+  it("events when a pin is removed", async () => {
+    let ipfsHash2Kec = Web3Utils.sha3(ipfsHash2);
+    let result = await trustyPinInstance.removePin(ipfsHash2, { from: accounts[0] })
+    await truffleAssert.eventEmitted(result, 'PinRemoved', (event) => {
+      return event.ipfsHashSha3 == ipfsHash2Kec &&
+             event.removedBy == accounts[0];
+    });
   });
 });

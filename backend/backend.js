@@ -23,6 +23,7 @@ let inFlight = {};
 let alreadyAdded = {};
 
 const populateAlreadyAdded = async () => {
+  console.log("populating existing ipfs pins");
   for await (let data of ipfs.pin.ls()) {
     if(data.type !== 'indirect') {
       alreadyAdded[data.cid.toString()] = true;
@@ -72,20 +73,20 @@ const run = async () => {
   );
 };
 
-// move
-console.log("populating existing ipfs pins");
+let deployed = await TrustyPin.deployed();
+
+deployed.events.PinAdded({}, (event) => {
+  console.log("PinAdded event:", event);
+  updatePins().then(run);
+});
+
+process.on('SIGINT', function() {
+  console.debug("Caught interrupt signal, exiting");
+  process.exit(1);
+});
+
 populateAlreadyAdded().then(() => {
-
   console.info("existing ifs pins:", Object.keys(alreadyAdded).length);
-
-  console.debug("starting background runner:", RUN_INTERVAL/1000,"s");
-  setInterval(() => {
-    try {
-      updatePins().then(run);
-    } catch(err) {
-      console.error("background runner err:", err);
-    }
-  }, RUN_INTERVAL);
 
   try {
     console.debug("starting initial run");
