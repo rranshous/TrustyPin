@@ -4,6 +4,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 
 contract Constants {
   uint8 internal constant STATE_REQUESTED = 2;
+  uint8 internal constant STATE_SERVED = 4;
 }
 
 contract TrustyPin is Constants {
@@ -77,6 +78,11 @@ contract TrustyPin is Constants {
     delete pinsByContentHash[_ipfsHash];
 
     emit PinRemoved(_ipfsHash, msg.sender);
+  }
+
+  function setPinState(string memory _ipfsHash, uint8 _state) public {
+    Pin storage pin = pinsByContentHash[_ipfsHash];
+    pin.state = _state;
   }
 
   function addAuthorizedPinner(address _addr) public {

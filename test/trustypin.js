@@ -57,6 +57,12 @@ contract("TrustyPin", accounts => {
     assert.equal(pinDetails.state, states.requested);
   });
 
+  it("lets you update pin to served state", async () => {
+    await trustyPinInstance.setPinState(ipfsHash, 4);
+    let pin = await trustyPinInstance.getPin(ipfsHash)
+    assert.equal(4, pin.state);
+  });
+
   it("associates sender to pin as pinner", async () => {
     const pinDetails = await trustyPinInstance.getPin(ipfsHash);
     assert.equal(pinDetails.pinner, accounts[0]);

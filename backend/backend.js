@@ -74,12 +74,11 @@ const pinToIpfs = async (contractPin) => {
   } else if(alreadyAdded[ipfsHash]) {
     console.debug("skipping, already added pin:", ipfsHash);
     return;
-  } else {
-    console.info("pinning to ipfs:", ipfsHash);
-  }
-  if(!await isWithinExpectedSize(contractPin)) {
+  } else if(!await isWithinExpectedSize(contractPin)) {
     console.info("pin is too large:", ipfsHash);
     return;
+  } else {
+    console.info("pinning to ipfs:", ipfsHash);
   }
   inFlight[ipfsHash] = true;
   let r = await ipfs.pin.add(ipfsHash);
