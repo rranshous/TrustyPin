@@ -35,12 +35,14 @@ contract TrustyPin is Constants {
   string[] ipfsHashes;
   mapping (address => bool) authorizedPinners;
   uint public chunksAvailable;
+  uint public chunkSize;
 
   constructor() public {
     super;
     owner = msg.sender;
     chunksAvailable = 0;
     authorizedPinners[owner] = true;
+    chunkSize = 1000000;
   }
 
   function addPin(string memory _ipfsHash, uint _chunksToAllocate) public {

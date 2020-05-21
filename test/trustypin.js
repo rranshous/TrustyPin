@@ -20,6 +20,11 @@ contract("TrustyPin", accounts => {
     contractChunksAvailable = await trustyPinInstance.chunksAvailable();
   });
 
+  it("publishes chunk size", async () => {
+    let chunkSize = await trustyPinInstance.chunkSize();
+    assert.equal(chunkSize, 1000000);
+  });
+
   it("can update chunksAvailable", async () => {
     let chunksAvailable = await trustyPinInstance.chunksAvailable();
     assert.equal(chunksAvailable, 0); // default
