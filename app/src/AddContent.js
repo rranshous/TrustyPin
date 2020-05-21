@@ -1,13 +1,11 @@
 import React, { Component } from "react";
 import Pin from "./Pin"
-import IpfsHttpClient from 'ipfs-http-client';
 import Ipfs from 'ipfs'
 
 // leaning on https://github.com/trufflesuite/drizzle/blob/develop/packages/react-components/src/new-context-api/ContractData.js
 
 const ipfsNodeUrl = process.env.IPFS_NODE_URL || 'http://localhost:5001';
 console.log("ipfsNodeUrl:", ipfsNodeUrl);
-const ipfs = IpfsHttpClient(ipfsNodeUrl);
 
 class AddContent extends Component {
 
@@ -36,13 +34,30 @@ class AddContent extends Component {
 		}
 	};
 
+  contract = () => {
+    return this.props.drizzle.contracts.TrustyPin;
+  };
+
+  addPinToContract = async (ipfsHash) => {
+    console.log("adding pin to contract:", ipfsHash);
+    let contract = this.contract();
+    console.log("contract:", contract);
+    let result = contract.methods.addPin.cacheSend(
+      ipfsHash, 1, { gas: 3000000 }
+    );
+    console.log("adding pin to contract result:", result);
+  };
+
   handlePublishClick = async () => {
     console.log("publish clicked:", this.state.content);
     let buffer = Buffer.from(this.state.content);
     let result = await this.ipfs.add(buffer);
+    let ipfsHash = null;
     for await (let r of result) {
-      console.log("r:", r);
+      ipfsHash = r.path;
     }
+    await this.addPinToContract(ipfsHash);
+    console.log("done publishing", ipfsHash);
   };
 
   handleContentChange = ({ target: el }) => {

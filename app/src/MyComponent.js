@@ -77,7 +77,10 @@ export default ({ drizzle, drizzleState }) => {
 
     <hr/>
 
-      <AddContent/>
+      <AddContent
+        drizzle={drizzle}
+        drizzleState={drizzleState}
+        accounts={drizzleState.accounts}/>
 
     </div>
   );
