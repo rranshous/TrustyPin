@@ -11,6 +11,7 @@ console.log("backendUrl:", backendUrl);
 console.log("ipfsNodeUrl:", ipfsNodeUrl);
 
 const provider = new Web3.providers.WebsocketProvider(backendUrl)
+const web3 = new Web3(provider);
 
 const trustyPinDetails = require('../app/src/contracts/TrustyPin.json');
 const TrustyPin = contract(trustyPinDetails);
@@ -22,6 +23,11 @@ let chunkSize;
 let pins = {};
 let inFlight = {};
 let alreadyAdded = {};
+
+const account = async () => {
+  let accounts = await web3.eth.getAccounts();
+  return accounts[0];
+};
 
 const sizeOfPin = async (cid, opts={}) => {
   let result = await ipfs.object.stat(cid, opts);
@@ -52,7 +58,7 @@ const populateAlreadyAdded = async () => {
   }
 };
 
-const updatePins = async () => {
+const loadPins = async () => {
   console.debug("updating pins");
   let deployed = await TrustyPin.deployed();
   let numberOfPins = await deployed.getNumberOfPins();
@@ -66,6 +72,30 @@ const updatePins = async () => {
   return pins;
 };
 
+const updateContractPinState = async (contractPin, newState) => {
+  let ipfsHash = contractPin.ipfsHash;
+  if(contractPin.state == newState) {
+    // could be a lie b/c we aren't keeping the passed pin data
+    // up to date
+    console.debug("Pin already has state:", newState, ipfsHash);
+    return;
+  };
+  console.info("updating state:", newState, ipfsHash);
+  let deployed = await TrustyPin.deployed();
+  await deployed.setPinState(ipfsHash, newState, { from: await account() });
+  let pin = await deployed.getPin(ipfsHash);
+  pins[pin.ipfsHash] = pin;
+  console.debug("Done updating state:", newState, ipfsHash);
+};
+
+const markServed = async (contractPin) => {
+  await updateContractPinState(contractPin, 4);
+};
+
+const markTooBig = async (contractPin) => {
+  await updateContractPinState(contractPin, 8);
+};
+
 const pinToIpfs = async (contractPin) => {
   let ipfsHash = contractPin.ipfsHash;
   if(inFlight[ipfsHash]) {
@@ -73,9 +103,11 @@ const pinToIpfs = async (contractPin) => {
     return;
   } else if(alreadyAdded[ipfsHash]) {
     console.debug("skipping, already added pin:", ipfsHash);
+    markServed(contractPin);
     return;
   } else if(!await isWithinExpectedSize(contractPin)) {
     console.info("pin is too large:", ipfsHash);
+    markTooBig(contractPin);
     return;
   } else {
     console.info("pinning to ipfs:", ipfsHash);
@@ -85,19 +117,22 @@ const pinToIpfs = async (contractPin) => {
   delete inFlight[ipfsHash];
   alreadyAdded[ipfsHash] = true;
   console.info("done pinning to ifs:", r);
+  markServed(contractPin);
 };
 
 const run = async () => {
   console.log("running");
   await Promise.all(
     Object.entries(pins).map(([_,pin]) => {
-      console.debug(`RequestedPin: ${pin.ipfsHash} (${pin.chunksAllocated}-${pin.pinner})`);
+      console.debug(`contract pin: ${pin.ipfsHash} (${pin.chunksAllocated}-${pin.pinner})`);
       return pinToIpfs(pin);
     })
   );
 };
 
 const handlePinEvent = async (error, event) => {
+  console.debug("handling add pin event:", error);
+  let deployed = await TrustyPin.deployed();
   let ipfsHash = event.args.ipfsHash;
   let contractPin = await deployed.getPin(ipfsHash);
   pinToIpfs(contractPin);
@@ -117,7 +152,7 @@ populateFromContract().then(() => {
 
   try {
     console.debug("starting initial run");
-    updatePins().then(run);
+    loadPins().then(run);
   } catch(err) {
     console.error("outside err:", err);
     process.exit(1);

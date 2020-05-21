@@ -46,6 +46,9 @@ class Pin extends Component {
         <div className="pinner">
           <label>pinner:</label>{this.pinData().pinner}
         </div>
+        <div className="state">
+          <label>state:</label>{this.pinData().state}
+        </div>
       </div>
     );
   }

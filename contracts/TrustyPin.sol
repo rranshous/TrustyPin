@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 contract Constants {
   uint8 internal constant STATE_REQUESTED = 2;
   uint8 internal constant STATE_SERVED = 4;
+  uint8 internal constant STATE_TOO_BIG = 8;
 }
 
 contract TrustyPin is Constants {
@@ -108,6 +109,13 @@ contract TrustyPin is Constants {
     require(pinsByContentHash[_ipfsHash].chunksAllocated > 0, 'Pin not found');
     Pin storage pin = pinsByContentHash[_ipfsHash];
     return (pin.ipfsHash, pin.chunksAllocated, pin.pinner, pin.state);
+  }
+
+  function isServed(string memory _ipfsHash)
+  public view returns (bool) {
+    require(pinsByContentHash[_ipfsHash].chunksAllocated > 0, 'Pin not found');
+    Pin storage pin = pinsByContentHash[_ipfsHash];
+    return (pin.state == STATE_SERVED);
   }
 
   function getIpfsHashByIndex(uint _index) public view returns (string memory) {

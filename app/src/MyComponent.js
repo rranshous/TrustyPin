@@ -1,7 +1,7 @@
 import React from "react";
 import { newContextComponents } from "@drizzle/react-components";
-import CurrentPins from "./CurrentPins"
-import logo from "./logo.png";
+import CurrentPins from "./CurrentPins";
+import AddContent from "./AddContent";
 
 const { AccountData, ContractData, ContractForm } = newContextComponents;
 
@@ -11,23 +11,23 @@ export default ({ drizzle, drizzleState }) => {
     <div className="App">
 
 
-      <div>
-        <h1>TrustyPin</h1>
-        <p>
-          Pin the best
-        </p>
-      </div>
+    <div>
+      <h1>TrustyPin</h1>
+      <p>
+        Pin the best
+      </p>
+    </div>
 
-      <div className="section">
-        <h2>Active Account</h2>
-        <AccountData
-          drizzle={drizzle}
-          drizzleState={drizzleState}
-          accountIndex={0}
-          units="ether"
-          precision={3}
-        />
-      </div>
+    <div className="section">
+      <h2>Active Account</h2>
+      <AccountData
+        drizzle={drizzle}
+        drizzleState={drizzleState}
+        accountIndex={0}
+        units="ether"
+        precision={3}
+      />
+    </div>
 
     <div className="section">
       <h2>pins</h2>
@@ -75,6 +75,9 @@ export default ({ drizzle, drizzleState }) => {
         drizzleState={drizzleState} />
     </div>
 
+    <hr/>
+
+      <AddContent/>
 
     </div>
   );
